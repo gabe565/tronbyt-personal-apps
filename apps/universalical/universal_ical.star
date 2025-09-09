@@ -48,7 +48,8 @@ def main(config):
     event = ics.json()["data"]
 
     if not event:
-        return build_calendar_frame(now, timezone, event, show_expanded_time_window, show_full_names)
+        # No events to show; return [] so Tidbyt skips rendering
+        return []
         #if there's an event inProgress, and it's not an All Day event, show the event
 
     elif event["detail"]["inProgress"] and not event["detail"]["isAllDay"]:
@@ -121,9 +122,7 @@ def get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_name
 def get_calendar_text_copy(event, now, eventStart, eventEnd, show_expanded_time_window, show_full_names):
     DEFAULT = eventStart.format("at 3:04 PM")
 
-    if not event["detail"]["isToday"] and not show_expanded_time_window:
-        return DONE_TEXT
-    elif event["detail"]["isToday"] and not event["detail"]["inProgress"]:
+    if event["detail"]["isToday"] and not event["detail"]["inProgress"]:
         return DEFAULT
     elif event["detail"] and show_expanded_time_window:
         return get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_names)
@@ -223,21 +222,12 @@ def get_calendar_bottom(data):
                 ),
             ),
         )
-
-    if not data["hasEvent"]:
-        children.append(
-            render.WrappedText(
-                DONE_TEXT,
-                color = "#ff83f3",
-            ),
-        )
-
-    elif data["shouldAnimateText"]:
-        children = [
-            render.Animation(
-                children,
-            ),
-        ]
+        if data.get("shouldAnimateText"):
+            children = [
+                render.Animation(
+                    children,
+                ),
+            ]
 
     return [
         render.Column(
@@ -408,7 +398,6 @@ P_SHOW_IN_PROGRESS = "show_in_progress"
 P_TRUNCATE_EVENT_SUMMARY = "truncate_event_summary"
 P_ALL_DAY = "all_day"
 
-DONE_TEXT = "DONE FOR THE DAY :-)"
 DEFAULT_SHOW_EXPANDED_TIME_WINDOW = True
 DEFAULT_TRUNCATE_EVENT_SUMMARY = True
 DEFAULT_SHOW_FULL_NAMES = False

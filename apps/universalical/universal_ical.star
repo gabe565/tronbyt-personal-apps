@@ -15,6 +15,16 @@ def main(config):
     )
 
     hours_window = int(config.str(P_HOURS_TO_CONSIDER, DEFAULT_HOURS_TO_CONSIDER))
+
+    # Read color settings
+    colors = {
+        "primary": config.str(P_PRIMARY_COLOR, DEFAULT_PRIMARY_COLOR),
+        "frame_bg": config.str(P_FRAME_BG_COLOR, DEFAULT_FRAME_BG_COLOR),
+        "soon": config.str(P_SOON_COLOR, DEFAULT_SOON_COLOR),
+        "imminent": config.str(P_IMMINENT_COLOR, DEFAULT_IMMINENT_COLOR),
+        "event_bg": config.str(P_EVENT_BG_COLOR, DEFAULT_EVENT_BG_COLOR),
+        "event_text": config.str(P_EVENT_TEXT_COLOR, DEFAULT_EVENT_TEXT_COLOR),
+    }
     show_full_names = config.bool("show_full_names", DEFAULT_SHOW_FULL_NAMES)
 
     ics_url = config.str("ics_url", DEFAULT_ICS_URL)
@@ -56,23 +66,23 @@ def main(config):
 
     # If in progress and not all-day, show the event frame
     if event["detail"]["inProgress"] and not event["detail"]["isAllDay"]:
-        return build_event_frame(event)
+        return build_event_frame(event, colors)
 
     # If outside the window, skip app
     if not is_within_window:
         return []
 
     # Otherwise render the calendar frame
-    return build_calendar_frame(now, timezone, event, hours_window, show_full_names)
+    return build_calendar_frame(now, timezone, event, hours_window, show_full_names, colors)
 
-def get_calendar_text_color(event):
-    DEFAULT = "#ff83f3"
+def get_calendar_text_color(event, colors):
+    DEFAULT = colors["primary"]
     if event["detail"]["isAllDay"]:
         return DEFAULT
     elif event["detail"]["minutesUntilStart"] <= 5:
-        return "#ff5000"
+        return colors["soon"]
     elif event["detail"]["minutesUntilStart"] <= 2:
-        return "#9000ff"
+        return colors["imminent"]
     else:
         return DEFAULT
 
@@ -139,7 +149,7 @@ def get_calendar_text_copy(event, now, eventStart, eventEnd, hours_window, show_
     else:
         return DEFAULT
 
-def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names):
+def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names, colors):
     baseObject = {
         "currentMonth": now.format("Jan").upper(),
         "currentDay": humanize.ordinal(now.day),
@@ -163,7 +173,7 @@ def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names)
         "summary": get_event_summary(event["name"]),
         "eventStartTimestamp": startTime,
         "copy": get_calendar_text_copy(event, now, startTime, endTime, hours_window, show_full_names),
-        "textColor": get_calendar_text_color(event),
+        "textColor": get_calendar_text_color(event, colors),
         "shouldAnimateText": should_animate_text(event),
         "hasEvent": True,
         "isToday": event["detail"]["isToday"],
@@ -172,12 +182,12 @@ def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names)
 
     return dict(baseObject.items() + eventObject.items())
 
-def render_calendar_base_object(top, bottom):
+def render_calendar_base_object(top, bottom, bg_color):
     return render.Root(
         delay = FRAME_DELAY,
         child = render.Box(
             padding = 2,
-            color = "#111",
+            color = bg_color,
             child = render.Column(
                 expanded = True,
                 children = top + bottom,
@@ -185,7 +195,7 @@ def render_calendar_base_object(top, bottom):
         ),
     )
 
-def get_calendar_top(data):
+def get_calendar_top(data, colors):
     return [
         render.Row(
             cross_align = "center",
@@ -195,13 +205,13 @@ def get_calendar_top(data):
                 render.Box(width = 2, height = 1),
                 render.Text(
                     data["currentMonth"],
-                    color = "#ff83f3",
+                    color = colors["primary"],
                     offset = -1,
                 ),
                 render.Box(width = 1, height = 1),
                 render.Text(
                     data["currentDay"],
-                    color = "#ff83f3",
+                    color = colors["primary"],
                     offset = -1,
                 ),
             ],
@@ -244,11 +254,11 @@ def get_calendar_bottom(data):
         ),
     ]
 
-def build_calendar_frame(now, usersTz, event, hours_window, show_full_names):
-    data = get_calendar_render_data(now, usersTz, event, hours_window, show_full_names)
+def build_calendar_frame(now, usersTz, event, hours_window, show_full_names, colors):
+    data = get_calendar_render_data(now, usersTz, event, hours_window, show_full_names, colors)
 
     # top half displays the calendar icon and date
-    top = get_calendar_top(data)
+    top = get_calendar_top(data, colors)
     bottom = get_calendar_bottom(data)
 
     # if it's an all day event, build the calendar up top and drop the name of the event below
@@ -260,6 +270,7 @@ def build_calendar_frame(now, usersTz, event, hours_window, show_full_names):
     return render_calendar_base_object(
         top = top,
         bottom = bottom,
+        bg_color = colors["frame_bg"],
     )
 
 def get_event_frame_copy_config(event):
@@ -286,8 +297,16 @@ def get_event_frame_copy_config(event):
         "textColor": "#fff500",
     }
 
-def build_event_frame(event):
-    data = get_event_frame_copy_config(event)
+def build_event_frame(event, colors):
+    dataObj = get_event_frame_copy_config(event)
+
+    # Override colors from config
+    data = {
+        "summary": dataObj["summary"],
+        "tagline": dataObj["tagline"],
+        "bgColor": colors["event_bg"],
+        "textColor": colors["event_text"],
+    }
     baseChildren = [
         render.WrappedText(
             data["summary"].upper(),
@@ -394,6 +413,49 @@ def get_schema():
                 options = options,
                 icon = "calendar",
             ),
+            # Colors
+            schema.Color(
+                id = P_PRIMARY_COLOR,
+                name = "Primary Color",
+                desc = "Primary accent color (e.g., month/day, upcoming text).",
+                default = DEFAULT_PRIMARY_COLOR,
+                icon = "brush",
+            ),
+            schema.Color(
+                id = P_FRAME_BG_COLOR,
+                name = "Frame Background Color",
+                desc = "Background color of the calendar frame.",
+                default = DEFAULT_FRAME_BG_COLOR,
+                icon = "brush",
+            ),
+            schema.Color(
+                id = P_SOON_COLOR,
+                name = "Soon Color",
+                desc = "Color when event starts within 5 minutes.",
+                default = DEFAULT_SOON_COLOR,
+                icon = "brush",
+            ),
+            schema.Color(
+                id = P_IMMINENT_COLOR,
+                name = "Imminent Color",
+                desc = "Color when event starts imminently.",
+                default = DEFAULT_IMMINENT_COLOR,
+                icon = "brush",
+            ),
+            schema.Color(
+                id = P_EVENT_BG_COLOR,
+                name = "Event Frame BG Color",
+                desc = "Background divider color for in-progress event frame.",
+                default = DEFAULT_EVENT_BG_COLOR,
+                icon = "brush",
+            ),
+            schema.Color(
+                id = P_EVENT_TEXT_COLOR,
+                name = "Event Frame Text Color",
+                desc = "Text color for in-progress event frame.",
+                default = DEFAULT_EVENT_TEXT_COLOR,
+                icon = "brush",
+            ),
         ],
     )
 
@@ -405,11 +467,27 @@ P_SHOW_IN_PROGRESS = "show_in_progress"
 P_TRUNCATE_EVENT_SUMMARY = "truncate_event_summary"
 P_ALL_DAY = "all_day"
 
+# Color parameter keys
+P_PRIMARY_COLOR = "primary_color"
+P_FRAME_BG_COLOR = "frame_bg_color"
+P_SOON_COLOR = "soon_color"
+P_IMMINENT_COLOR = "imminent_color"
+P_EVENT_BG_COLOR = "event_bg_color"
+P_EVENT_TEXT_COLOR = "event_text_color"
+
 DEFAULT_HOURS_TO_CONSIDER = "24"
 DEFAULT_TRUNCATE_EVENT_SUMMARY = True
 DEFAULT_SHOW_FULL_NAMES = False
 DEFAULT_SHOW_IN_PROGRESS = True
 DEFAULT_TIMEZONE = "America/New_York"
+
+# Default colors
+DEFAULT_PRIMARY_COLOR = "#ff83f3"
+DEFAULT_FRAME_BG_COLOR = "#111"
+DEFAULT_SOON_COLOR = "#ff5000"
+DEFAULT_IMMINENT_COLOR = "#9000ff"
+DEFAULT_EVENT_BG_COLOR = "#ff78e9"
+DEFAULT_EVENT_TEXT_COLOR = "#fff500"
 FRAME_DELAY = 100
 LAMBDA_URL = "https://6bfnhr9vy7.execute-api.us-east-1.amazonaws.com/ics-next-event"
 

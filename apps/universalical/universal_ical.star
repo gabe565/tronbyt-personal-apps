@@ -14,7 +14,7 @@ def main(config):
         config.get("$tz", DEFAULT_TIMEZONE),
     )
 
-    show_expanded_time_window = config.bool("show_expanded_time_window", DEFAULT_SHOW_EXPANDED_TIME_WINDOW)
+    hours_window = int(config.str(P_HOURS_TO_CONSIDER, DEFAULT_HOURS_TO_CONSIDER))
     show_full_names = config.bool("show_full_names", DEFAULT_SHOW_FULL_NAMES)
 
     ics_url = config.str("ics_url", DEFAULT_ICS_URL)
@@ -47,17 +47,23 @@ def main(config):
 
     event = ics.json()["data"]
 
+    # No events at all -> skip app
     if not event:
-        # No events to show; return [] so Tidbyt skips rendering
         return []
-        #if there's an event inProgress, and it's not an All Day event, show the event
 
-    elif event["detail"]["inProgress"] and not event["detail"]["isAllDay"]:
+    # Calculate window inclusion
+    is_within_window = event["detail"]["inProgress"] or event["detail"]["minutesUntilStart"] <= hours_window * 60
+
+    # If in progress and not all-day, show the event frame
+    if event["detail"]["inProgress"] and not event["detail"]["isAllDay"]:
         return build_event_frame(event)
-    elif event["detail"]:
-        return build_calendar_frame(now, timezone, event, show_expanded_time_window, show_full_names)
-    else:
-        return build_calendar_frame(now, timezone, event, show_expanded_time_window, show_full_names)
+
+    # If outside the window, skip app
+    if not is_within_window:
+        return []
+
+    # Otherwise render the calendar frame
+    return build_calendar_frame(now, timezone, event, hours_window, show_full_names)
 
 def get_calendar_text_color(event):
     DEFAULT = "#ff83f3"
@@ -119,21 +125,21 @@ def get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_name
     else:
         return DEFAULT
 
-def get_calendar_text_copy(event, now, eventStart, eventEnd, show_expanded_time_window, show_full_names):
+def get_calendar_text_copy(event, now, eventStart, eventEnd, hours_window, show_full_names):
     DEFAULT = eventStart.format("at 3:04 PM")
+
+    is_within_window = event["detail"]["inProgress"] or event["detail"]["minutesUntilStart"] <= hours_window * 60
 
     if event["detail"]["isToday"] and not event["detail"]["inProgress"]:
         return DEFAULT
-    elif event["detail"] and show_expanded_time_window:
+    elif event["detail"] and is_within_window:
         return get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_names)
     elif event["detail"] and not event["detail"]["isAllDay"] and event["detail"]["minutesUntilStart"] <= 5:
         return "in %d min" % event["detail"]["minutesUntilStart"]
-    elif event["detail"]["isAllDay"] and not show_expanded_time_window:
-        return get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_names)
     else:
         return DEFAULT
 
-def get_calendar_render_data(now, usersTz, event, show_expanded_time_window, show_full_names):
+def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names):
     baseObject = {
         "currentMonth": now.format("Jan").upper(),
         "currentDay": humanize.ordinal(now.day),
@@ -145,7 +151,8 @@ def get_calendar_render_data(now, usersTz, event, show_expanded_time_window, sho
         baseObject["hasEvent"] = False
         return baseObject
 
-    shouldRenderSummary = event["detail"]["isToday"] or show_expanded_time_window
+    is_within_window = event["detail"]["inProgress"] or event["detail"]["minutesUntilStart"] <= hours_window * 60
+    shouldRenderSummary = event["detail"]["isToday"] or is_within_window
     if not shouldRenderSummary:
         baseObject["hasEvent"] = False
         return baseObject
@@ -155,7 +162,7 @@ def get_calendar_render_data(now, usersTz, event, show_expanded_time_window, sho
     eventObject = {
         "summary": get_event_summary(event["name"]),
         "eventStartTimestamp": startTime,
-        "copy": get_calendar_text_copy(event, now, startTime, endTime, show_expanded_time_window, show_full_names),
+        "copy": get_calendar_text_copy(event, now, startTime, endTime, hours_window, show_full_names),
         "textColor": get_calendar_text_color(event),
         "shouldAnimateText": should_animate_text(event),
         "hasEvent": True,
@@ -237,8 +244,8 @@ def get_calendar_bottom(data):
         ),
     ]
 
-def build_calendar_frame(now, usersTz, event, show_expanded_time_window, show_full_names):
-    data = get_calendar_render_data(now, usersTz, event, show_expanded_time_window, show_full_names)
+def build_calendar_frame(now, usersTz, event, hours_window, show_full_names):
+    data = get_calendar_render_data(now, usersTz, event, hours_window, show_full_names)
 
     # top half displays the calendar icon and date
     top = get_calendar_top(data)
@@ -358,11 +365,11 @@ def get_schema():
                 icon = "calendar",
                 default = DEFAULT_ICS_URL,
             ),
-            schema.Toggle(
-                id = P_SHOW_EXPANDED_TIME_WINDOW,
-                name = "Show Expanded Time Window",
-                desc = "Show events outside of a 24 hour window.",
-                default = DEFAULT_SHOW_EXPANDED_TIME_WINDOW,
+            schema.Text(
+                id = P_HOURS_TO_CONSIDER,
+                name = "Hours to Consider",
+                desc = "Number of hours ahead to include.",
+                default = DEFAULT_HOURS_TO_CONSIDER,
                 icon = "clock",
             ),
             schema.Toggle(
@@ -392,13 +399,13 @@ def get_schema():
 
 P_LOCATION = "location"
 P_ICS_URL = "ics_url"
-P_SHOW_EXPANDED_TIME_WINDOW = "show_expanded_time_window"
+P_HOURS_TO_CONSIDER = "hours_to_consider"
 P_SHOW_FULL_NAMES = "show_full_names"
 P_SHOW_IN_PROGRESS = "show_in_progress"
 P_TRUNCATE_EVENT_SUMMARY = "truncate_event_summary"
 P_ALL_DAY = "all_day"
 
-DEFAULT_SHOW_EXPANDED_TIME_WINDOW = True
+DEFAULT_HOURS_TO_CONSIDER = "24"
 DEFAULT_TRUNCATE_EVENT_SUMMARY = True
 DEFAULT_SHOW_FULL_NAMES = False
 DEFAULT_SHOW_IN_PROGRESS = True

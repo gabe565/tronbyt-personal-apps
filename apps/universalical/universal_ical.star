@@ -6,6 +6,8 @@ load("render.star", "render")
 load("schema.star", "schema")
 load("time.star", "time")
 
+SERVICE_URL = "http://ics-calendar-tidbyt:8080"
+
 def main(config):
     location = config.str(P_LOCATION)
     location = json.decode(location) if location else {}
@@ -48,7 +50,7 @@ def main(config):
 
     now = time.now().in_location(timezone)
     ics = http.post(
-        url = LAMBDA_URL,
+        url = SERVICE_URL,
         json_body = {"icsUrl": ics_url, "tz": timezone, "showInProgress": show_in_progress, "includeAllDayEvents": include_all_day, "onlyShowAllDayEvents": only_show_all_day},
     )
 
@@ -489,10 +491,7 @@ DEFAULT_IMMINENT_COLOR = "#9000ff"
 DEFAULT_EVENT_BG_COLOR = "#ff78e9"
 DEFAULT_EVENT_TEXT_COLOR = "#fff500"
 FRAME_DELAY = 100
-LAMBDA_URL = "https://6bfnhr9vy7.execute-api.us-east-1.amazonaws.com/ics-next-event"
 
-#this is the original AWS Lambda URL that is hosting the helper function
-#LAMBDA_URL = "https://xmd10xd284.execute-api.us-east-1.amazonaws.com/ics-next-event"
 CALENDAR_ICON = base64.decode("iVBORw0KGgoAAAANSUhEUgAAAAkAAAALCAYAAACtWacbAAAAAXNSR0IArs4c6QAAAE9JREFUKFNjZGBgYJgzZ87/lJQURlw0I0xRYEMHw/qGCgZ0GqSZ8a2Myv8aX1eGls27GXDRYEUg0/ABxv///xOn6OjRowzW1tYMuOghaxIAD/ltSOskB+YAAAAASUVORK5CYII=")
 
 #this is a weird calendar but its the only public ics that reliably has events every week

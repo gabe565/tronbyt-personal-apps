@@ -28,6 +28,7 @@ def main(config):
         "event_text": config.str(P_EVENT_TEXT_COLOR, DEFAULT_EVENT_TEXT_COLOR),
     }
     show_full_names = config.bool("show_full_names", DEFAULT_SHOW_FULL_NAMES)
+    use_24_hour = config.bool(P_USE_24_HOUR, DEFAULT_USE_24_HOUR)
 
     ics_url = config.str("ics_url", DEFAULT_ICS_URL)
     show_in_progress = config.bool("show_in_progress", DEFAULT_SHOW_IN_PROGRESS)
@@ -75,7 +76,7 @@ def main(config):
         return []
 
     # Otherwise render the calendar frame
-    return build_calendar_frame(now, timezone, event, hours_window, show_full_names, colors)
+    return build_calendar_frame(now, timezone, event, hours_window, show_full_names, use_24_hour, colors)
 
 def get_calendar_text_color(event, colors):
     DEFAULT = colors["primary"]
@@ -93,22 +94,22 @@ def should_animate_text(event):
         return False
     return event["detail"]["minutesUntilStart"] <= 5
 
-def get_tomorrow_text_copy(eventStart, show_full_names):
-    DEFAULT = eventStart.format("TMRW 3:04 PM")
+def get_tomorrow_text_copy(eventStart, show_full_names, use_24_hour):
+    DEFAULT = eventStart.format("TMRW " + ("15:04" if use_24_hour else "3:04 PM"))
     if show_full_names:
-        return eventStart.format("Tomorrow at 3:04 PM")
+        return eventStart.format("Tomorrow at " + ("15:04" if use_24_hour else "3:04 PM"))
     else:
         return DEFAULT
 
-def get_this_week_text_copy(eventStart, show_full_names):
-    DEFAULT = eventStart.format("Mon at 3:04 PM")
+def get_this_week_text_copy(eventStart, show_full_names, use_24_hour):
+    DEFAULT = eventStart.format("Mon at " + ("15:04" if use_24_hour else "3:04 PM"))
 
     if show_full_names:
-        return eventStart.format("Monday at 3:04 PM")
+        return eventStart.format("Monday at " + ("15:04" if use_24_hour else "3:04 PM"))
     else:
         return DEFAULT
 
-def get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_names):
+def get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_names, use_24_hour):
     DEFAULT = "in %s" % humanize.relative_time(now, eventStart)
 
     multiday = False
@@ -130,28 +131,28 @@ def get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_name
         else:
             return eventStart.format("on Mon")
     elif event["detail"]["isTomorrow"]:
-        return get_tomorrow_text_copy(eventStart, show_full_names)
+        return get_tomorrow_text_copy(eventStart, show_full_names, use_24_hour)
 
     elif event["detail"]["isThisWeek"]:
-        return get_this_week_text_copy(eventStart, show_full_names)
+        return get_this_week_text_copy(eventStart, show_full_names, use_24_hour)
     else:
         return DEFAULT
 
-def get_calendar_text_copy(event, now, eventStart, eventEnd, hours_window, show_full_names):
-    DEFAULT = eventStart.format("at 3:04 PM")
+def get_calendar_text_copy(event, now, eventStart, eventEnd, hours_window, show_full_names, use_24_hour):
+    DEFAULT = eventStart.format("at " + ("15:04" if use_24_hour else "3:04 PM"))
 
     is_within_window = event["detail"]["inProgress"] or event["detail"]["minutesUntilStart"] <= hours_window * 60
 
     if event["detail"]["isToday"] and not event["detail"]["inProgress"]:
         return DEFAULT
     elif event["detail"] and is_within_window:
-        return get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_names)
+        return get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_names, use_24_hour)
     elif event["detail"] and not event["detail"]["isAllDay"] and event["detail"]["minutesUntilStart"] <= 5:
         return "in %d min" % event["detail"]["minutesUntilStart"]
     else:
         return DEFAULT
 
-def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names, colors):
+def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names, use_24_hour, colors):
     baseObject = {
         "currentMonth": now.format("Jan").upper(),
         "currentDay": humanize.ordinal(now.day),
@@ -174,7 +175,7 @@ def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names,
     eventObject = {
         "summary": get_event_summary(event["name"]),
         "eventStartTimestamp": startTime,
-        "copy": get_calendar_text_copy(event, now, startTime, endTime, hours_window, show_full_names),
+        "copy": get_calendar_text_copy(event, now, startTime, endTime, hours_window, show_full_names, use_24_hour),
         "textColor": get_calendar_text_color(event, colors),
         "shouldAnimateText": should_animate_text(event),
         "hasEvent": True,
@@ -256,8 +257,8 @@ def get_calendar_bottom(data):
         ),
     ]
 
-def build_calendar_frame(now, usersTz, event, hours_window, show_full_names, colors):
-    data = get_calendar_render_data(now, usersTz, event, hours_window, show_full_names, colors)
+def build_calendar_frame(now, usersTz, event, hours_window, show_full_names, use_24_hour, colors):
+    data = get_calendar_render_data(now, usersTz, event, hours_window, show_full_names, use_24_hour, colors)
 
     # top half displays the calendar icon and date
     top = get_calendar_top(data, colors)
@@ -407,6 +408,13 @@ def get_schema():
                 default = DEFAULT_SHOW_IN_PROGRESS,
                 icon = "calendar",
             ),
+            schema.Toggle(
+                id = P_USE_24_HOUR,
+                name = "Use 24-Hour Time",
+                desc = "Format times using 24-hour clock.",
+                default = DEFAULT_USE_24_HOUR,
+                icon = "clock",
+            ),
             schema.Dropdown(
                 id = P_ALL_DAY,
                 name = "Show All Day Events",
@@ -468,6 +476,7 @@ P_SHOW_FULL_NAMES = "show_full_names"
 P_SHOW_IN_PROGRESS = "show_in_progress"
 P_TRUNCATE_EVENT_SUMMARY = "truncate_event_summary"
 P_ALL_DAY = "all_day"
+P_USE_24_HOUR = "use_24_hour"
 
 # Color parameter keys
 P_PRIMARY_COLOR = "primary_color"
@@ -482,6 +491,7 @@ DEFAULT_TRUNCATE_EVENT_SUMMARY = True
 DEFAULT_SHOW_FULL_NAMES = False
 DEFAULT_SHOW_IN_PROGRESS = True
 DEFAULT_TIMEZONE = "America/New_York"
+DEFAULT_USE_24_HOUR = False
 
 # Default colors
 DEFAULT_PRIMARY_COLOR = "#ff83f3"

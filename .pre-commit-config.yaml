@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: pixlet-format
+        name: pixlet-format
+        entry: pixlet format --verbose
+        language: system
+        files: '\.star$'
+      - id: pixlet-lint
+        name: pixlet-lint
+        entry: pixlet lint --verbose --fix
+        language: system
+        files: '\.star$'

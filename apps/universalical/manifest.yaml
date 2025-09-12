@@ -1,8 +1,8 @@
 ---
-id: universal-ical
-name: Universal ICal
+id: universal-ical-gabe565
+name: Universal ICal (gabe565)
 summary: Displays Calendar from iCal
 desc: Displays Calendar from iCal (.ics) files.
-author: quesurifn <Kyle C. R. Fahey>
+author: gabe565
 fileName: universal_ical.star
-packageName: universalical
+packageName: universalical-gabe565

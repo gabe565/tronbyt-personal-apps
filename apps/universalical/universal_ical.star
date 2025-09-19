@@ -242,12 +242,13 @@ def get_calendar_bottom(data):
                 ),
             ),
         )
-        if data.get("shouldAnimateText"):
-            children = [
-                render.Animation(
-                    children,
-                ),
-            ]
+
+    elif data["shouldAnimateText"]:
+        children = [
+            render.Animation(
+                children,
+            ),
+        ]
 
     return [
         render.Column(

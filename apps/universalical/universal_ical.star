@@ -25,7 +25,6 @@ def main(config):
         "frame_bg": config.str(P_FRAME_BG_COLOR, DEFAULT_FRAME_BG_COLOR),
         "soon": config.str(P_SOON_COLOR, DEFAULT_SOON_COLOR),
         "imminent": config.str(P_IMMINENT_COLOR, DEFAULT_IMMINENT_COLOR),
-        "event_bg": config.str(P_EVENT_BG_COLOR, DEFAULT_EVENT_BG_COLOR),
         "event_text": config.str(P_EVENT_TEXT_COLOR, DEFAULT_EVENT_TEXT_COLOR),
     }
     show_full_names = config.bool("show_full_names", DEFAULT_SHOW_FULL_NAMES)
@@ -70,7 +69,7 @@ def main(config):
 
     # If in progress and not all-day, show the event frame
     if event["detail"]["inProgress"] and not event["detail"]["isAllDay"]:
-        return build_event_frame(event, colors)
+        return build_event_frame(event, colors, now)
 
     # If outside the window, skip app
     if not is_within_window:
@@ -175,7 +174,7 @@ def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names,
     startTime = time.from_timestamp(int(event["start"])).in_location(usersTz)
     endTime = time.from_timestamp(int(event["end"])).in_location(usersTz)
     eventObject = {
-        "summary": get_event_summary(event["name"]),
+        "summary": event["name"],
         "eventStartTimestamp": startTime,
         "copy": get_calendar_text_copy(event, now, startTime, endTime, hours_window, show_full_names, use_24_hour),
         "textColor": get_calendar_text_color(event, colors),
@@ -284,79 +283,45 @@ def get_event_frame_copy_config(event):
     minutes_to_end = event["detail"]["minutesUntilEnd"]
     hours_to_end = event["detail"]["hoursToEnd"]
 
-    tagline = None
     if minutes_to_start >= 1:
-        tagline = ("in %d" % minutes_to_start, "min")
+        tagline = "in %d min" % minutes_to_start
     elif hours_to_end >= 99:
-        tagline = ("", "now")
+        tagline = "now"
     elif minutes_to_end >= 99:
-        tagline = ("Ends in %d" % hours_to_end, "h")
+        tagline = "Ends in %dh" % hours_to_end
     elif minutes_to_end > 1:
-        tagline = ("Ends in %d" % minutes_to_end, "min")
+        tagline = "Ends in %dmin" % minutes_to_end
     else:
-        tagline = ("", "almost done")
+        tagline = "almost done"
 
     return {
-        "summary": get_event_summary(event["name"]),
+        "summary": event["name"],
         "tagline": tagline,
         "bgColor": "#ff78e9",
         "textColor": "#fff500",
     }
 
-def build_event_frame(event, colors):
+def build_event_frame(event, colors, now):
     dataObj = get_event_frame_copy_config(event)
 
-    # Override colors from config
     data = {
+        "currentMonth": now.format("Jan").upper(),
+        "currentDay": humanize.ordinal(now.day),
         "summary": dataObj["summary"],
-        "tagline": dataObj["tagline"],
-        "bgColor": colors["event_bg"],
+        "copy": dataObj["tagline"],
         "textColor": colors["event_text"],
+        "shouldAnimateText": False,
+        "hasEvent": True,
     }
-    baseChildren = [
-        render.WrappedText(
-            data["summary"].upper(),
-            height = 17,
-        ),
-        render.Box(
-            color = data["bgColor"],
-            height = 1,
-        ),
-        render.Box(height = 3),
-        render.Row(
-            main_align = "end",
-            expanded = True,
-            children = [
-                render.Text(
-                    data["tagline"][0],
-                    color = data["textColor"],
-                ),
-                render.Box(height = 1, width = 1),
-                render.Text(
-                    data["tagline"][1],
-                    color = data["textColor"],
-                ),
-            ],
-        ),
-    ]
-    return render.Root(
-        child = render.Box(
-            padding = 2,
-            child = render.Column(
-                main_align = "start",
-                cross_align = "start",
-                expanded = True,
-                children = baseChildren,
-            ),
-        ),
-    )
 
-def get_event_summary(summary):
-    if DEFAULT_TRUNCATE_EVENT_SUMMARY:
-        splitSum = summary.split()
-        return " ".join(splitSum) if len(splitSum) <= 3 else " ".join(splitSum[:3]) + "..."
-    else:
-        return summary
+    top = get_calendar_top(data, colors)
+    bottom = get_calendar_bottom(data)
+
+    return render_calendar_base_object(
+        top = top,
+        bottom = bottom,
+        bg_color = colors["frame_bg"],
+    )
 
 def get_schema():
     options = [
@@ -456,13 +421,6 @@ def get_schema():
                 icon = "brush",
             ),
             schema.Color(
-                id = P_EVENT_BG_COLOR,
-                name = "Event Frame BG Color",
-                desc = "Background divider color for in-progress event frame.",
-                default = DEFAULT_EVENT_BG_COLOR,
-                icon = "brush",
-            ),
-            schema.Color(
                 id = P_EVENT_TEXT_COLOR,
                 name = "Event Frame Text Color",
                 desc = "Text color for in-progress event frame.",
@@ -477,7 +435,6 @@ P_ICS_URL = "ics_url"
 P_HOURS_TO_CONSIDER = "hours_to_consider"
 P_SHOW_FULL_NAMES = "show_full_names"
 P_SHOW_IN_PROGRESS = "show_in_progress"
-P_TRUNCATE_EVENT_SUMMARY = "truncate_event_summary"
 P_ALL_DAY = "all_day"
 P_USE_24_HOUR = "use_24_hour"
 
@@ -486,11 +443,9 @@ P_PRIMARY_COLOR = "primary_color"
 P_FRAME_BG_COLOR = "frame_bg_color"
 P_SOON_COLOR = "soon_color"
 P_IMMINENT_COLOR = "imminent_color"
-P_EVENT_BG_COLOR = "event_bg_color"
 P_EVENT_TEXT_COLOR = "event_text_color"
 
 DEFAULT_HOURS_TO_CONSIDER = "24"
-DEFAULT_TRUNCATE_EVENT_SUMMARY = True
 DEFAULT_SHOW_FULL_NAMES = False
 DEFAULT_SHOW_IN_PROGRESS = True
 DEFAULT_TIMEZONE = "America/New_York"
@@ -501,7 +456,6 @@ DEFAULT_PRIMARY_COLOR = "#ff83f3"
 DEFAULT_FRAME_BG_COLOR = "#000"
 DEFAULT_SOON_COLOR = "#ff5000"
 DEFAULT_IMMINENT_COLOR = "#ff5000"
-DEFAULT_EVENT_BG_COLOR = "#ff78e9"
 DEFAULT_EVENT_TEXT_COLOR = "#fff500"
 FRAME_DELAY = 100
 

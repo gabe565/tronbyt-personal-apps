@@ -144,12 +144,13 @@ def get_calendar_text_copy(event, now, eventStart, eventEnd, hours_window, show_
 
     is_within_window = event["detail"]["inProgress"] or event["detail"]["minutesUntilStart"] <= hours_window * 60
 
-    if event["detail"]["isToday"] and not event["detail"]["inProgress"]:
-        return DEFAULT
-    elif event["detail"] and is_within_window:
+    if event["detail"] and not event["detail"]["isAllDay"] and event["detail"]["minutesUntilStart"] <= 10:
+        if event["detail"]["minutesUntilStart"] < 1:
+            return "now"
+        else:
+            return "in %d min" % event["detail"]["minutesUntilStart"]
+    if event["detail"] and is_within_window:
         return get_expanded_time_text_copy(event, now, eventStart, eventEnd, show_full_names, use_24_hour)
-    elif event["detail"] and not event["detail"]["isAllDay"] and event["detail"]["minutesUntilStart"] <= 5:
-        return "in %d min" % event["detail"]["minutesUntilStart"]
     else:
         return DEFAULT
 

@@ -82,10 +82,10 @@ def get_calendar_text_color(event, colors):
     DEFAULT = colors["primary"]
     if event["detail"]["isAllDay"]:
         return DEFAULT
-    elif event["detail"]["minutesUntilStart"] <= 5:
-        return colors["soon"]
     elif event["detail"]["minutesUntilStart"] <= 2:
         return colors["imminent"]
+    elif event["detail"]["minutesUntilStart"] <= 5:
+        return colors["soon"]
     else:
         return DEFAULT
 
@@ -498,7 +498,7 @@ DEFAULT_USE_24_HOUR = False
 DEFAULT_PRIMARY_COLOR = "#ff83f3"
 DEFAULT_FRAME_BG_COLOR = "#000"
 DEFAULT_SOON_COLOR = "#ff5000"
-DEFAULT_IMMINENT_COLOR = "#9000ff"
+DEFAULT_IMMINENT_COLOR = "#ff5000"
 DEFAULT_EVENT_BG_COLOR = "#ff78e9"
 DEFAULT_EVENT_TEXT_COLOR = "#fff500"
 FRAME_DELAY = 100

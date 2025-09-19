@@ -7,6 +7,7 @@ load("schema.star", "schema")
 load("time.star", "time")
 
 SERVICE_URL = "http://ics-calendar-tidbyt:8080"
+#SERVICE_URL = "http://localhost:8080"
 
 def main(config):
     location = config.str(P_LOCATION)

@@ -56,7 +56,8 @@ def main(config):
     )
 
     if (ics.status_code != 200):
-        fail("Failed to fetch ICS file")
+        print("HTTP request failed with status %d", ics.status_code)
+        return []
 
     event = ics.json()["data"]
 

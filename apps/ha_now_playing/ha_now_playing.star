@@ -65,7 +65,7 @@ def render_detail_text(name, color = "#ffffff", font = "tb-8"):
     return render.Marquee(
         width = 41,
         child = render.Text(
-            content = name.upper() if name != None else "",
+            content = name if name != None else "",
             color = color,
             font = font,
         ),
@@ -172,6 +172,12 @@ def main(config):
 
     if line2 == friendly_name:
         line2 = "→ %s" % line2
+
+    if config.bool("upper", False):
+        media_title = media_title.upper()
+        line1 = line1.upper()
+        line2 = line2.upper()
+
     media_info = [
         render_detail_text(line1),
         render_detail_text(line2, color = "#cccccc"),
@@ -180,7 +186,7 @@ def main(config):
     return render.Root(
         child = render.Column(
             children = [
-                render_media_title(media_title.upper(), app_name),
+                render_media_title(media_title, app_name),
                 render.Padding(
                     pad = (2, 2, 0, 0),
                     child = render.Row(
@@ -218,6 +224,13 @@ def get_schema():
                 name = "Bearer Token",
                 icon = "key",
                 desc = "Long-lived access token for Home Assistant",
+            ),
+            schema.Toggle(
+                id = "upper",
+                name = "Capitalize Text",
+                desc = "Ouptuts text in upper case.",
+                icon = "font",
+                default = False,
             ),
         ],
     )

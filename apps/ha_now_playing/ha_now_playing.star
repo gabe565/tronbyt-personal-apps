@@ -141,7 +141,7 @@ def main(config):
     media_content_type = attributes["media_content_type"] if "media_content_type" in attributes else None
     media_artist = attributes["media_artist"] if "media_artist" in attributes else None
     media_album_name = attributes["media_album_name"] if "media_album_name" in attributes else ""
-    app_name = attributes["app_name"] if "app_name" in attributes else None
+    app_name = attributes["app_name"] if "app_name" in attributes else attributes["source"] if "source" in attributes else None
     app_id = attributes["app_id"] if "app_id" in attributes else None
     friendly_name = attributes["friendly_name"] if "friendly_name" in attributes else ""
     app_name = get_app_name(app_name, app_id, friendly_name) if app_name == None else app_name

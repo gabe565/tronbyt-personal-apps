@@ -123,7 +123,7 @@ def main(config):
     if status != "playing":
         return skip_execution()
 
-    media_title = attributes["media_title"] if "media_title" in attributes else None
+    media_title = attributes["media_title"].replace("&amp;", "&") if "media_title" in attributes else None
     media_image = None
 
     if "entity_picture" in attributes:
@@ -139,8 +139,8 @@ def main(config):
         cache.set(attributes["entity_picture"], media_image, ttl_seconds = 600)
 
     media_content_type = attributes["media_content_type"] if "media_content_type" in attributes else None
-    media_artist = attributes["media_artist"] if "media_artist" in attributes else None
-    media_album_name = attributes["media_album_name"] if "media_album_name" in attributes else ""
+    media_artist = attributes["media_artist"].replace("&amp;", "&") if "media_artist" in attributes else None
+    media_album_name = attributes["media_album_name"].replace("&amp;", "&") if "media_album_name" in attributes else ""
     app_name = attributes["app_name"] if "app_name" in attributes else attributes["source"] if "source" in attributes else None
     app_id = attributes["app_id"] if "app_id" in attributes else None
     friendly_name = attributes["friendly_name"] if "friendly_name" in attributes else ""

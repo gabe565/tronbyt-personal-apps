@@ -12,12 +12,13 @@ load("http.star", "http")
 load("render.star", "render")
 load("schema.star", "schema")
 
-DEFAULT_IMAGE = base64.decode("""
-iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAMAAAAMs7fIAAAAGFBMVEVHcEz/////////////////////
-//////8dS1W+AAAAB3RSTlMAAQMCBvYFRZBFoAAAAElJREFUGJWNj0sSwCAIQxNtm/vf2LGOQ0QXZgPz
-+ASAS2kKKANEKYL0GRKIf8LI2PRsRAxSMK1ST80ENlVPXi97SjtxzWh/3akBR3MCH53fHWkAAAAASUVO
-RK5CYII=
-""")
+DEFAULT_IMAGE = """
+iVBORw0KGgoAAAANSUhEUgAAABEAAAARCAMAAAAMs7fIAAAAGFBMVEVHcEz///////////////////////////8dS1W+AAAAB3RSTlMAAQMCBvYFRZBFoAAAAElJREFUGJWNj0sSwCAIQxNtm/vf2LGOQ0QXZgPz+ASAS2kKKANEKYL0GRKIf8LI2PRsRAxSMK1ST80ENlVPXi97SjtxzWh/3akBR3MCH53fHWkAAAAASUVORK5CYII=
+"""
+
+DEFAULT_IMAGE_2X = """
+iVBORw0KGgoAAAANSUhEUgAAACQAAAAkAgMAAACcbnALAAAACVBMVEUAAAD///8mRckgsHh3AAAAA3RSTlP//wDXyg1BAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAZElEQVQYlZ3QsRHAIAgFUJeEghHYBzewCFPmaxJ+QxUL790J3oeR3xl/FCKiW5fs49AyPOEaGadKoXk8Ic1wtEGWgcr1SEtCeclKWhLKGzUd1vzcJHhTMSnTcyJOycnPNqzf1Q3hMrzt6nZ0pwAAAABJRU5ErkJggg==
+"""
 
 def get_entity_status(ha_server, entity_id, token):
     if ha_server == None:
@@ -135,8 +136,10 @@ def main(config):
 
     if "entity_picture" in attributes:
         media_image = cache.get(attributes["entity_picture"])
+    elif scale >= 2:
+        media_image = base64.decode(DEFAULT_IMAGE_2X)
     else:
-        media_image = DEFAULT_IMAGE
+        media_image = base64.decode(DEFAULT_IMAGE)
 
     if media_image == None:
         res = http.get("%s%s" % (ha_server, attributes["entity_picture"]))

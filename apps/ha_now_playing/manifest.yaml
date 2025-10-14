@@ -4,4 +4,5 @@ name: HA Now Playing
 summary: Now Playing for HA
 desc: Now Playing for Home Assistant Media Players.
 author: drudge, gabe565
+preview: ha_now_playing.webp
 supports2x: true

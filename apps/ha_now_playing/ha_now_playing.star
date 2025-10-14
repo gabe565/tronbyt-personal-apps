@@ -46,24 +46,25 @@ def get_entity_status(ha_server, entity_id, token):
         cache.set(cache_key, rep.body(), ttl_seconds = 10)
     return state_res
 
-def render_media_title(title, app_name):
+def render_media_title(title, app_name, font = "tb-8", scale = 1):
     return render.Padding(
         pad = (2, 0, 0, 0),
         child = render.Marquee(
-            width = 60,
+            width = 60 * scale,
             child = render.Padding(
                 pad = (0, 2, 0, 0),
                 child = render.Text(
                     content = title,
                     color = get_title_color(app_name),
+                    font = font,
                 ),
             ),
         ),
     )
 
-def render_detail_text(name, color = "#ffffff", font = "tb-8"):
+def render_detail_text(name, color = "#ffffff", font = "tb-8", scale = 1):
     return render.Marquee(
-        width = 41,
+        width = 41 * scale,
         child = render.Text(
             content = name if name != None else "",
             color = color,
@@ -109,6 +110,12 @@ def main(config):
     entity_id = config.get("entity_id")
     token = config.get("auth")
     entity_status = get_entity_status(ha_server, entity_id, token)
+    if config.bool("2x", False):
+        scale = 2
+        font = "10x20"
+    else:
+        scale = 1
+        font = "tb-8"
 
     # print(entity_status)
     if entity_status == None:
@@ -179,19 +186,25 @@ def main(config):
         line2 = line2.upper()
 
     media_info = [
-        render_detail_text(line1),
-        render_detail_text(line2, color = "#cccccc"),
+        render_detail_text(line1, font = font, scale = scale),
+        render_detail_text(line2, color = "#cccccc", font = font, scale = scale),
     ]
+
+    image_size = 36 if scale == 2 else 17 * scale
 
     return render.Root(
         child = render.Column(
             children = [
-                render_media_title(media_title, app_name),
+                render_media_title(media_title, app_name, font = font, scale = scale),
                 render.Padding(
-                    pad = (2, 2, 0, 0),
+                    pad = (2 * scale, 2, 0, 0),
                     child = render.Row(
                         children = [
-                            render.Image(src = media_image, height = 17, width = 17),
+                            render.Image(
+                                src = media_image,
+                                height = image_size,
+                                width = image_size,
+                            ),
                             render.Padding(
                                 pad = (2, 0, 0, 0),
                                 child = render.Column(children = media_info),
@@ -230,6 +243,13 @@ def get_schema():
                 name = "Capitalize Text",
                 desc = "Ouptuts text in upper case.",
                 icon = "font",
+                default = False,
+            ),
+            schema.Toggle(
+                id = "2x",
+                name = "Render 2x",
+                desc = "Render at 2x resolution.",
+                icon = "up-right-and-down-left-from-center",
                 default = False,
             ),
         ],

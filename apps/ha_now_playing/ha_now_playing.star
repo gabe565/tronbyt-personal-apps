@@ -111,7 +111,7 @@ def main(config):
     entity_id = config.get("entity_id")
     token = config.get("auth")
     entity_status = get_entity_status(ha_server, entity_id, token)
-    if config.bool("2x", False):
+    if config.bool("$2x"):
         scale = 2
         font = "10x20"
     else:
@@ -246,13 +246,6 @@ def get_schema():
                 name = "Capitalize Text",
                 desc = "Ouptuts text in upper case.",
                 icon = "font",
-                default = False,
-            ),
-            schema.Toggle(
-                id = "2x",
-                name = "Render 2x",
-                desc = "Render at 2x resolution.",
-                icon = "up-right-and-down-left-from-center",
                 default = False,
             ),
         ],

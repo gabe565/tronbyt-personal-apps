@@ -346,7 +346,7 @@ def main(config):
                     children = [
                         render.WrappedText(
                             content = str_delta.replace("0", "O"),
-                            font = "5x8" if scale == 1 else "terminus-20",
+                            font = "5x8" if scale == 1 else "terminus-20-light",
                             color = color_delta,
                             align = "center",
                             linespacing = -3 * scale,
@@ -371,7 +371,7 @@ def main(config):
                         ),
                         render.Text(
                             content = str_delta.replace("0", "O"),
-                            font = "6x13" if scale == 1 else "terminus-20",
+                            font = "6x13" if scale == 1 else "terminus-20-light",
                             color = color_delta,
                             offset = 0,
                         ),
@@ -464,7 +464,7 @@ def main(config):
             left_delta_row = [
                 render.Text(
                     content = str_delta.replace("0", "O"),
-                    font = "tb-8" if scale == 1 else "terminus-14",
+                    font = "tb-8" if scale == 1 else "terminus-14-light",
                     color = color_delta,
                     offset = 0,
                 ),
@@ -632,7 +632,7 @@ def main(config):
                         ),
                         render.WrappedText(
                             content = str_delta.replace("0", "O"),
-                            font = "tom-thumb" if scale == 1 else "terminus-12",
+                            font = "tom-thumb" if scale == 1 else "terminus-12-light",
                             color = color_delta,
                             align = "center",
                             width = 30 * scale,
@@ -661,7 +661,7 @@ def main(config):
                         ),
                         render.Text(
                             content = " " + str_delta.replace("0", "O"),
-                            font = "tb-8" if scale == 1 else "terminus-14",
+                            font = "tb-8" if scale == 1 else "terminus-14-light",
                             color = color_delta,
                             offset = -scale,
                         ),
@@ -741,7 +741,7 @@ def main(config):
             left_delta_row = [
                 render.Text(
                     content = str_delta.replace("0", "O"),
-                    font = "tb-8" if scale == 1 else "terminus-14",
+                    font = "tb-8" if scale == 1 else "terminus-14-light",
                     color = color_delta,
                     offset = 0,
                 ),

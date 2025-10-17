@@ -377,7 +377,7 @@ def main(config):
                         ),
                         render.Text(
                             content = " " + ARROWS[direction],
-                            font = "tb-8" if scale == 1 else "terminus-22",
+                            font = "tb-8" if scale == 1 else "10x20",
                             color = color_arrow,
                             offset = 0,
                         ),
@@ -474,7 +474,7 @@ def main(config):
                 ),
                 render.Text(
                     content = ARROWS[direction],
-                    font = "5x8" if scale == 1 else "terminus-14",
+                    font = "5x8" if scale == 1 else "6x13",
                     color = color_arrow,
                     offset = 0,
                 ),
@@ -667,7 +667,7 @@ def main(config):
                         ),
                         render.Text(
                             content = " " + ARROWS[direction],
-                            font = "tb-8" if scale == 1 else "terminus-18",
+                            font = "tb-8" if scale == 1 else "10x20",
                             color = color_arrow,
                             offset = -scale,
                         ),
@@ -751,7 +751,7 @@ def main(config):
                 ),
                 render.Text(
                     content = ARROWS[direction],
-                    font = "5x8" if scale == 1 else "terminus-14",
+                    font = "5x8" if scale == 1 else "6x13",
                     color = color_arrow,
                     offset = 0,
                 ),

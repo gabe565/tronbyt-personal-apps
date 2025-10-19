@@ -113,7 +113,7 @@ def main(config):
     entity_status = get_entity_status(ha_server, entity_id, token)
     if config.bool("$2x"):
         scale = 2
-        font = "10x20"
+        font = "terminus-20"
     else:
         scale = 1
         font = "tb-8"

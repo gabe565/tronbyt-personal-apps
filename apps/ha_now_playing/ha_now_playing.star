@@ -49,7 +49,7 @@ def get_entity_status(ha_server, entity_id, token):
 
 def render_media_title(title, app_name, font = "tb-8", scale = 1):
     return render.Padding(
-        pad = (2, 0, 0, 0),
+        pad = (2 * scale, 0, 0, 0),
         child = render.Marquee(
             width = 60 * scale,
             child = render.Padding(

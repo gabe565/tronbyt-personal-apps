@@ -196,6 +196,7 @@ def main(config):
     image_size = 36 if scale == 2 else 17 * scale
 
     return render.Root(
+        delay = 50 if scale == 1 else 25,
         child = render.Column(
             children = [
                 render_media_title(media_title, app_name, font = font, scale = scale),

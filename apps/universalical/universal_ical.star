@@ -56,7 +56,7 @@ def main(config):
     )
 
     if (ics.status_code != 200):
-        print("HTTP request failed with status %d", ics.status_code)
+        print("HTTP request failed with status", ics.status_code)
         return []
 
     event = ics.json()["data"]

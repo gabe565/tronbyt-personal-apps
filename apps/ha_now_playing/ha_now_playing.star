@@ -5,9 +5,7 @@ Description: Now Playing for Home Assistant Media Players.
 Author: Nick Penree
 """
 
-load("cache.star", "cache")
 load("encoding/base64.star", "base64")
-load("encoding/json.star", "json")
 load("http.star", "http")
 load("render.star", "render")
 load("schema.star", "schema")
@@ -23,29 +21,19 @@ iVBORw0KGgoAAAANSUhEUgAAACQAAAAkAgMAAACcbnALAAAACVBMVEUAAAD///8mRckgsHh3AAAAA3RS
 def get_entity_status(ha_server, entity_id, token):
     if ha_server == None:
         fail("Home Assistant server not configured")
-
     if entity_id == None:
         fail("Entity ID not configured")
-
     if token == None:
         fail("Bearer token not configured")
 
-    state_res = None
-    cache_key = "%s.%s" % (ha_server, entity_id)
-    cached_res = cache.get(cache_key)
-    if cached_res != None:
-        state_res = json.decode(cached_res)
-    else:
-        rep = http.get("%s/api/states/%s" % (ha_server, entity_id), headers = {
-            "Authorization": "Bearer %s" % token,
-        })
-        if rep.status_code != 200:
-            print("HTTP request failed with status %d", rep.status_code)
-            return None
+    rep = http.get("%s/api/states/%s" % (ha_server, entity_id), headers = {
+        "Authorization": "Bearer %s" % token,
+    }, ttl_seconds = 10)
+    if rep.status_code != 200:
+        print("HTTP request failed with status %d", rep.status_code)
+        return None
 
-        state_res = rep.json()
-        cache.set(cache_key, rep.body(), ttl_seconds = 10)
-    return state_res
+    return rep.json()
 
 def render_media_title(title, app_name, font = "tb-8", scale = 1):
     return render.Padding(
@@ -135,18 +123,15 @@ def main(config):
     media_image = None
 
     if "entity_picture" in attributes:
-        media_image = cache.get(attributes["entity_picture"])
-    elif scale >= 2:
-        media_image = base64.decode(DEFAULT_IMAGE_2X)
-    else:
-        media_image = base64.decode(DEFAULT_IMAGE)
+        res = http.get("%s%s" % (ha_server, attributes["entity_picture"]), ttl_seconds = 600)
+        if res.status_code == 200:
+            media_image = res.body()
 
     if media_image == None:
-        res = http.get("%s%s" % (ha_server, attributes["entity_picture"]))
-        if res.status_code != 200:
-            fail("HTTP request failed with status %d" % res.status_code)
-        media_image = res.body()
-        cache.set(attributes["entity_picture"], media_image, ttl_seconds = 600)
+        if scale >= 2:
+            media_image = base64.decode(DEFAULT_IMAGE_2X)
+        else:
+            media_image = base64.decode(DEFAULT_IMAGE)
 
     media_content_type = attributes["media_content_type"] if "media_content_type" in attributes else None
     media_artist = attributes["media_artist"].replace("&amp;", "&") if "media_artist" in attributes else None

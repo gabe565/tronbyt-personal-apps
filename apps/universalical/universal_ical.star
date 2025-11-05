@@ -229,6 +229,8 @@ def get_calendar_bottom(data):
         children.append(
             render.Marquee(
                 width = 64,
+                offset_start = 64,
+                offset_end = 64,
                 child = render.Text(
                     data["summary"],
                 ),
@@ -237,6 +239,8 @@ def get_calendar_bottom(data):
         children.append(
             render.Marquee(
                 width = 64,
+                offset_start = 64,
+                offset_end = 64,
                 child = render.Text(
                     data["copy"],
                     color = data["textColor"],

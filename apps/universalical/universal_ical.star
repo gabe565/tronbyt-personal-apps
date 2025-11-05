@@ -189,7 +189,6 @@ def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names,
 
 def render_calendar_base_object(top, bottom, bg_color):
     return render.Root(
-        delay = FRAME_DELAY,
         child = render.Box(
             padding = 2,
             color = bg_color,
@@ -458,7 +457,6 @@ DEFAULT_FRAME_BG_COLOR = "#000"
 DEFAULT_SOON_COLOR = "#ff5000"
 DEFAULT_IMMINENT_COLOR = "#ff5000"
 DEFAULT_EVENT_TEXT_COLOR = "#fff500"
-FRAME_DELAY = 100
 
 CALENDAR_ICON = base64.decode("iVBORw0KGgoAAAANSUhEUgAAAAkAAAALCAYAAACtWacbAAAAAXNSR0IArs4c6QAAAE9JREFUKFNjZGBgYJgzZ87/lJQURlw0I0xRYEMHw/qGCgZ0GqSZ8a2Myv8aX1eGls27GXDRYEUg0/ABxv///xOn6OjRowzW1tYMuOghaxIAD/ltSOskB+YAAAAASUVORK5CYII=")
 

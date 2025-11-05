@@ -189,6 +189,7 @@ def get_calendar_render_data(now, usersTz, event, hours_window, show_full_names,
 
 def render_calendar_base_object(top, bottom, bg_color):
     return render.Root(
+        show_full_animation = True,
         child = render.Box(
             padding = 2,
             color = bg_color,

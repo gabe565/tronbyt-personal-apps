@@ -1,0 +1,10 @@
+---
+id: drwho
+name: Doctor Who
+summary: Doctor Who animation
+desc: Doctor Who animation.
+author: magicthighs
+fileName: drwho.star
+packageName: drwho
+recommended_interval: 10
+supports2x: true
